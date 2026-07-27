@@ -17,7 +17,7 @@ IMPRESSORA_PORTA = 9100
 
 # --- Configurações para IMPRESSORA_TIPO = "usb" ---
 # Descubra os IDs com `lsusb` (Linux) e o pacote python-escpos docs.
-IMPRESSORA_VENDOR_ID = 0x04b8
+IMPRESSORA_VENDOR_ID = 0x04b8 #É MOLODOY NESSA PORRA
 IMPRESSORA_PRODUCT_ID = 0x0202
 
 # --- Configurações para IMPRESSORA_TIPO = "serial" ---
