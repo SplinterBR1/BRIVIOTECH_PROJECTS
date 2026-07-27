@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel — Lanchonete</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #17191b;
+    --panel: #1f2224;
+    --panel-line: #2c3033;
+    --ticket: #f3efe4;
+    --ticket-text: #2a2822;
+    --ticket-dim: #7a7568;
+    --text: #eae7df;
+    --text-dim: #8b8f92;
+    --amber: #e2a341;
+    --green: #57b37c;
+    --red: #dd6b5c;
+    --blue: #6ea8d8;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--panel-line);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .marca {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .marca .furo {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--amber);
+    display: inline-block;
+  }
+
+  header h1 {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    margin: 0;
+  }
+
+  header .sub {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  nav.abas {
+    display: flex;
+    gap: 4px;
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: 999px;
+    padding: 4px;
+  }
+
+  nav.abas button {
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+
+  nav.abas button.ativa {
+    background: var(--amber);
+    color: #241a08;
+  }
+
+  main { padding: 24px 28px 60px; }
+
+  section.view { display: none; }
+  section.view.ativa { display: block; }
+
+  /* ---------- PEDIDOS: kanban de comandas ---------- */
+
+  .colunas {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(230px, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+
+  @media (max-width: 1100px) {
+    .colunas { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .coluna h2 {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    margin: 0 0 10px 2px;
+  }
+
+  .coluna h2 .contagem {
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: 999px;
+    padding: 1px 8px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .pilha { display: flex; flex-direction: column; gap: 12px; min-height: 40px; }
+
+  .ticket {
+    background: var(--ticket);
+    color: var(--ticket-text);
+    border-radius: 4px;
+    position: relative;
+    font-family: 'IBM Plex Mono', monospace;
+    box-shadow: 0 3px 10px rgba(0,0,0,.28);
+  }
+
+  .ticket .faixa {
+    height: 5px;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .ticket .corpo { padding: 12px 14px 10px; }
+
+  .ticket .id { font-size: 12.5px; font-weight: 600; letter-spacing: .3px; }
+  .ticket .cliente { font-size: 11.5px; color: var(--ticket-dim); margin-top: 2px; }
+
+  .ticket .picote {
+    position: relative;
+    margin: 10px -14px;
+    border-top: 1px dashed #c9c3b2;
+  }
+  .ticket .picote::before, .ticket .picote::after {
+    content: "";
+    position: absolute;
+    top: -6px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--panel);
+  }
+  .ticket .picote::before { left: -6px; }
+  .ticket .picote::after { right: -6px; }
+
+  .ticket .itens { font-size: 12px; line-height: 1.75; }
+  .ticket .itens .linha { display: flex; justify-content: space-between; gap: 8px; }
+
+  .ticket .rodape {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed #c9c3b2;
+    font-size: 12px;
+  }
+
+  .ticket .total { font-weight: 600; }
+
+  .ticket select.status {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: 999px;
+    border: 1px solid #d8d2c0;
+    background: #fff;
+    padding: 5px 10px;
+    cursor: pointer;
+    color: var(--ticket-text);
+  }
+
+  .vazio {
+    color: var(--text-dim);
+    font-size: 12.5px;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 10px 2px;
+  }
+
+  /* ---------- ESTOQUE ---------- */
+
+  table.estoque {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  table.estoque th {
+    text-align: left;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--text-dim);
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--panel-line);
+  }
+
+  table.estoque td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--panel-line);
+    font-size: 13.5px;
+    vertical-align: middle;
+  }
+
+  table.estoque tr.baixo { box-shadow: inset 3px 0 0 var(--red); }
+  table.estoque tr.ok { box-shadow: inset 3px 0 0 var(--green); }
+
+  table.estoque input {
+    background: #141617;
+    border: 1px solid var(--panel-line);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    width: 90px;
+  }
+  table.estoque input.nome-input { width: 160px; }
+
+  .btn {
+    border: none;
+    border-radius: 6px;
+    padding: 7px 13px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .btn-salvar { background: var(--blue); color: #0d1f2e; }
+  .btn-remover { background: transparent; color: var(--red); border: 1px solid rgba(221,107,92,.4); }
+  .btn-add { background: var(--amber); color: #241a08; }
+
+  .linha-nova td { background: rgba(255,255,255,.02); }
+
+  .toast {
+    position: fixed;
+    bottom: 22px; right: 22px;
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: all .2s ease;
+    pointer-events: none;
+  }
+  .toast.mostrar { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="marca">
+    <span class="furo"></span>
+    <div>
+      <h1>Painel da Lanchonete</h1>
+      <div class="sub" id="relogio">carregando…</div>
+    </div>
+  </div>
+  <nav class="abas">
+    <button class="ativa" data-view="pedidos">Pedidos</button>
+    <button data-view="estoque">Estoque</button>
+  </nav>
+</header>
+
+<main>
+  <section class="view ativa" id="view-pedidos">
+    <div class="colunas" id="colunas-pedidos"></div>
+  </section>
+
+  <section class="view" id="view-estoque">
+    <table class="estoque">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Preço (R$)</th>
+          <th>Estoque</th>
+          <th>Mínimo</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="corpo-estoque"></tbody>
+      <tfoot>
+        <tr class="linha-nova">
+          <td><input class="nome-input" id="novo-nome" placeholder="Novo produto"></td>
+          <td><input id="novo-preco" placeholder="0,00"></td>
+          <td><input id="novo-qtd" placeholder="0"></td>
+          <td><input id="novo-min" placeholder="5"></td>
+          <td><button class="btn btn-add" onclick="adicionarProduto()">+ Adicionar</button></td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const COLUNAS = [
+  { chave: "pendente", titulo: "Pendente", cor: "var(--amber)" },
+  { chave: "confirmado", titulo: "Confirmado", cor: "var(--blue)" },
+  { chave: "em_preparo", titulo: "Em preparo", cor: "var(--amber)" },
+  { chave: "pronto", titulo: "Pronto", cor: "var(--green)" },
+  { chave: "entregue", titulo: "Entregue", cor: "var(--text-dim)" },
+];
+
+const TODOS_STATUS = ["pendente","confirmado","em_preparo","pronto","entregue","cancelado","estoque_insuficiente"];
+
+function mostrarToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("mostrar");
+  setTimeout(() => t.classList.remove("mostrar"), 2200);
+}
+
+function atualizarRelogio() {
+  document.getElementById("relogio").textContent =
+    new Date().toLocaleString("pt-BR", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
+}
+setInterval(atualizarRelogio, 1000 * 30);
+atualizarRelogio();
+
+// ---------- Navegação entre abas ----------
+document.querySelectorAll("nav.abas button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav.abas button").forEach(b => b.classList.remove("ativa"));
+    btn.classList.add("ativa");
+    document.querySelectorAll("section.view").forEach(v => v.classList.remove("ativa"));
+    document.getElementById("view-" + btn.dataset.view).classList.add("ativa");
+  });
+});
+
+// ---------- Pedidos ----------
+async function carregarPedidos() {
+  const resp = await fetch("/api/pedidos");
+  const pedidos = await resp.json();
+  const container = document.getElementById("colunas-pedidos");
+  container.innerHTML = "";
+
+  COLUNAS.forEach(col => {
+    const doColuna = pedidos.filter(p => p.status === col.chave);
+    const divColuna = document.createElement("div");
+    divColuna.className = "coluna";
+    divColuna.innerHTML = `<h2>${col.titulo} <span class="contagem">${doColuna.length}</span></h2>
+      <div class="pilha">${
+        doColuna.length === 0
+          ? '<div class="vazio">— sem pedidos —</div>'
+          : doColuna.map(p => renderTicket(p, col.cor)).join("")
+      }</div>`;
+    container.appendChild(divColuna);
+  });
+}
+
+function renderTicket(pedido, cor) {
+  const itensHtml = pedido.itens.map(i =>
+    `<div class="linha"><span>${i.quantidade}x ${i.nome}</span></div>`
+  ).join("");
+
+  const opcoes = TODOS_STATUS.map(s =>
+    `<option value="${s}" ${s === pedido.status ? "selected" : ""}>${s.replace("_"," ")}</option>`
+  ).join("");
+
+  return `
+    <div class="ticket" data-id="${pedido.id}">
+      <div class="faixa" style="background:${cor}"></div>
+      <div class="corpo">
+        <div class="id">${pedido.id}</div>
+        <div class="cliente">${pedido.cliente_nome || "cliente não identificado"}</div>
+        <div class="picote"></div>
+        <div class="itens">${itensHtml}</div>
+        <div class="rodape">
+          <span class="total">R$ ${pedido.total.toFixed(2)}</span>
+          <select class="status" onchange="mudarStatus('${pedido.id}', this.value)">${opcoes}</select>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function mudarStatus(pedidoId, novoStatus) {
+  const resp = await fetch(`/api/pedidos/${pedidoId}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: novoStatus }),
+  });
+  if (resp.ok) {
+    mostrarToast(`Pedido ${pedidoId} → ${novoStatus.replace("_"," ")}`);
+    carregarPedidos();
+  } else {
+    mostrarToast("Erro ao atualizar pedido");
+  }
+}
+
+// ---------- Estoque ----------
+async function carregarEstoque() {
+  const resp = await fetch("/api/estoque");
+  const produtos = await resp.json();
+  const corpo = document.getElementById("corpo-estoque");
+  corpo.innerHTML = produtos.map(p => `
+    <tr class="${p.quantidade_estoque <= p.estoque_minimo ? 'baixo' : 'ok'}" data-id="${p.id}">
+      <td><input class="nome-input" value="${p.nome}" data-campo="nome"></td>
+      <td><input value="${p.preco.toFixed(2)}" data-campo="preco"></td>
+      <td><input value="${p.quantidade_estoque}" data-campo="quantidade_estoque"></td>
+      <td><input value="${p.estoque_minimo}" data-campo="estoque_minimo"></td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-salvar" onclick="salvarProduto(${p.id}, this)">Salvar</button>
+        <button class="btn btn-remover" onclick="removerProduto(${p.id})">Remover</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function salvarProduto(id, botao) {
+  const linha = botao.closest("tr");
+  const dados = {};
+  linha.querySelectorAll("input").forEach(input => {
+    dados[input.dataset.campo] = input.value;
+  });
+
+  const resp = await fetch(`/api/estoque/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dados),
+  });
+
+  if (resp.ok) {
+    mostrarToast("Estoque atualizado");
+    carregarEstoque();
+  } else {
+    mostrarToast("Erro ao salvar produto");
+  }
+}
+
+async function removerProduto(id) {
+  if (!confirm("Remover este produto do cardápio?")) return;
+  const resp = await fetch(`/api/estoque/${id}`, { method: "DELETE" });
+  if (resp.ok) {
+    mostrarToast("Produto removido");
+    carregarEstoque();
+  } else {
+    mostrarToast("Erro ao remover produto");
+  }
+}
+
+async function adicionarProduto() {
+  const dados = {
+    nome: document.getElementById("novo-nome").value,
+    preco: document.getElementById("novo-preco").value,
+    quantidade_estoque: document.getElementById("novo-qtd").value || 0,
+    estoque_minimo: document.getElementById("novo-min").value || 5,
+  };
+  if (!dados.nome || !dados.preco) {
+    mostrarToast("Preencha ao menos nome e preço");
+    return;
+  }
+  const resp = await fetch("/api/estoque", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dados),
+  });
+  if (resp.ok) {
+    ["novo-nome","novo-preco","novo-qtd","novo-min"].forEach(id => document.getElementById(id).value = "");
+    mostrarToast("Produto adicionado");
+    carregarEstoque();
+  } else {
+    mostrarToast("Erro ao adicionar produto");
+  }
+}
+
+// ---------- Ciclo de atualização ----------
+carregarPedidos();
+carregarEstoque();
+setInterval(carregarPedidos, 5000);
+setInterval(carregarEstoque, 8000);
+</script>
+
+</body>
+</html>
