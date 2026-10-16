@@ -10,7 +10,7 @@ Configuração necessária (variáveis de ambiente):
 
 Formato de mensagem esperado do cliente:
     PEDIDO
-    2x X-Burger
+    2x X-Burger 
     1x Refrigerante Lata
 
 Como rodar localmente para teste:
